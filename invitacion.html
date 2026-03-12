@@ -258,7 +258,7 @@ body{background:var(--ivory);color:var(--ink);font-family:'EB Garamond',serif;ov
     <div class="stage" id="stage">
       <div class="empty" id="emptyState">
         <div class="empty-ring">✦</div>
-        <p>Añade fotos de los invitados</p>
+        <p></p>
       </div>
       <!-- slides go here via JS -->
       <div class="carr-nav">
@@ -273,7 +273,7 @@ body{background:var(--ivory);color:var(--ink);font-family:'EB Garamond',serif;ov
 
     <!-- UPLOAD PANEL -->
     <div class="up-panel">
-      <p class="up-hint"></p>
+      
 
       <div class="meta-row" id="metaRow">
         <input class="meta-inp" id="nameInp" type="text" placeholder="Nombre del invitado" oninput="updateMeta()">
@@ -655,154 +655,140 @@ function sendRSVP() {
 
 
 
+
+
+
 <script>
-/* ══════════════════════════════════════════
-   AMBIENT MUSIC — Web Audio API
-   Arpa + piano + pad elegante
-   Sin internet · Arranca al primer toque del usuario
-══════════════════════════════════════════ */
+/* ══ MÚSICA AMBIENTE — arranca sola, siempre ══ */
 (function(){
-  let ctx = null, started = false;
+  let ctx, started = false;
 
-  // Notas musicales en Hz — escala de Re mayor (cálida y romántica)
-  const D4=293.66, E4=329.63, Fs4=369.99, G4=392.00,
-        A4=440.00, B4=493.88, Cs5=554.37, D5=587.33,
-        E5=659.25, Fs5=739.99, A5=880.00, D3=146.83,
-        A3=220.00, Fs3=184.99, G3=196.00;
-
-  // Melodía principal (nota, duración en beats)
-  const MELODY = [
-    [D4,2],[Fs4,1],[A4,1],[D5,2],[A4,1],[Fs4,1],
-    [E4,2],[G4,1],[B4,1],[E5,2],[B4,1],[G4,1],
-    [Fs4,2],[A4,1],[Cs5,1],[D5,2],[Cs5,1],[A4,1],
-    [D4,4],[null,4],
-    [A4,2],[Fs4,1],[D4,1],[E4,2],[Fs4,1],[G4,1],
-    [Fs4,2],[E4,1],[D4,1],[Cs5,2],[B4,2],
-    [D5,2],[A4,1],[Fs4,1],[G4,2],[E4,2],
-    [D4,6],[null,2],
-  ];
-
-  // Arpegios de acompañamiento (acordes en Re mayor)
-  const CHORDS = [
-    [D3, Fs3, A3],   // D
-    [E4*0.5, G3, B4*0.5],  // Em
-    [Fs3*0.5, A3*0.5, Cs5*0.5], // F#m  -- slightly lower
-    [G3, B4*0.5, D4*0.5],  // G
-  ];
-
-  const BPM = 52;
-  const BEAT = 60 / BPM;
-
-  function initAudio() {
+  function start() {
     if (started) return;
     started = true;
-    ctx = new (window.AudioContext || window.webkitAudioContext)();
 
-    // Master gain (soft)
+    ctx = new (window.AudioContext || window.webkitAudioContext)();
+    if (ctx.state === 'suspended') ctx.resume();
+
     const master = ctx.createGain();
     master.gain.setValueAtTime(0, ctx.currentTime);
-    master.gain.linearRampToValueAtTime(0.28, ctx.currentTime + 3);
+    master.gain.linearRampToValueAtTime(0.22, ctx.currentTime + 4);
     master.connect(ctx.destination);
 
-    // Reverb convolver (simple impulse)
-    const convolver = ctx.createConvolver();
-    const rate = ctx.sampleRate;
-    const len  = rate * 2.5;
-    const imp  = ctx.createBuffer(2, len, rate);
+    // Reverb simple
+    const rev = ctx.createConvolver();
+    const sr = ctx.sampleRate, rl = sr * 3;
+    const rb = ctx.createBuffer(2, rl, sr);
     for (let c = 0; c < 2; c++) {
-      const d = imp.getChannelData(c);
-      for (let i = 0; i < len; i++)
-        d[i] = (Math.random()*2-1) * Math.pow(1 - i/len, 2.8);
+      const d = rb.getChannelData(c);
+      for (let i = 0; i < rl; i++) d[i] = (Math.random()*2-1) * Math.pow(1-i/rl, 2.5);
     }
-    convolver.buffer = imp;
-    const revGain = ctx.createGain();
-    revGain.gain.value = 0.35;
-    convolver.connect(revGain);
-    revGain.connect(master);
+    rev.buffer = rb;
+    const rg = ctx.createGain(); rg.gain.value = 0.4;
+    rev.connect(rg); rg.connect(master);
 
-    // Low-pass filter for warmth
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 2800;
-    filter.connect(master);
-    filter.connect(convolver);
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass'; lp.frequency.value = 3000;
+    lp.connect(master); lp.connect(rev);
 
-    // Schedule music (loops)
-    schedulePart(filter, ctx.currentTime + 0.5);
+    loop(lp, ctx.currentTime + 0.3);
   }
 
-  function makeNote(dest, freq, startTime, dur, type='sine', vol=0.18) {
+  // Re mayor — melodía tipo vals lento
+  const BPM = 48, B = 60/BPM;
+  const SEQ = [
+    // [freq, beats]
+    [293.66,2],[369.99,1],[440.00,1],
+    [587.33,2],[493.88,1],[440.00,1],
+    [369.99,2],[440.00,1],[493.88,1],
+    [587.33,4],
+    [659.25,2],[587.33,1],[493.88,1],
+    [440.00,2],[369.99,1],[329.63,1],
+    [293.66,2],[369.99,1],[440.00,1],
+    [587.33,6],[null,2],
+    [493.88,2],[440.00,1],[369.99,1],
+    [440.00,2],[493.88,1],[587.33,1],
+    [659.25,2],[587.33,1],[493.88,1],
+    [440.00,4],
+    [369.99,2],[440.00,1],[493.88,1],
+    [587.33,2],[493.88,1],[440.00,1],
+    [369.99,2],[329.63,1],[293.66,1],
+    [293.66,6],[null,2],
+  ];
+
+  // Acordes de acompañamiento (arpa)
+  const ARP = [
+    [146.83, 220.00, 293.66, 369.99],
+    [164.81, 220.00, 329.63, 415.30],
+    [184.99, 246.94, 369.99, 493.88],
+    [196.00, 246.94, 392.00, 493.88],
+  ];
+
+  function note(dst, freq, t, dur, type, vol) {
     if (!freq) return;
-    const g  = ctx.createGain();
-    const osc = ctx.createOscillator();
-    osc.type = type;
-    osc.frequency.value = freq;
-    // slight detune for warmth
-    osc.detune.value = (Math.random()-0.5)*6;
-
-    const attack = 0.08, release = dur * 0.5;
-    g.gain.setValueAtTime(0, startTime);
-    g.gain.linearRampToValueAtTime(vol, startTime + attack);
-    g.gain.setValueAtTime(vol, startTime + dur - release);
-    g.gain.linearRampToValueAtTime(0, startTime + dur);
-
-    osc.connect(g);
-    g.connect(dest);
-    osc.start(startTime);
-    osc.stop(startTime + dur + 0.05);
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    o.detune.value = (Math.random()-0.5)*8;
+    const att = Math.min(0.1, dur*0.15);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(vol, t+att);
+    g.gain.setValueAtTime(vol, t+dur-dur*0.4);
+    g.gain.linearRampToValueAtTime(0, t+dur);
+    o.connect(g); g.connect(dst);
+    o.start(t); o.stop(t+dur+0.1);
   }
 
-  function makeHarp(dest, freq, startTime) {
-    // Arpa: sine + triangle mezclados
-    makeNote(dest, freq,       startTime, 2.2, 'sine',     0.10);
-    makeNote(dest, freq*2,     startTime, 1.4, 'triangle', 0.04);
-    makeNote(dest, freq*3,     startTime, 0.8, 'sine',     0.02);
-  }
+  function loop(dst, t) {
+    const totalB = SEQ.reduce((s,[,d])=>s+d,0);
+    const dur = totalB * B;
 
-  function schedulePart(dest, startTime) {
-    const totalBeats = MELODY.reduce((s,[,d])=>s+d, 0);
-    const loopDur    = totalBeats * BEAT;
-
-    // Melody
-    let t = startTime;
-    for (const [freq, beats] of MELODY) {
-      const dur = beats * BEAT;
-      if (freq) makeNote(dest, freq, t, dur * 0.88, 'sine', 0.15);
-      t += dur;
+    // Melodía
+    let mt = t;
+    for (const [f,b] of SEQ) {
+      note(dst, f, mt, b*B*0.85, 'sine', 0.13);
+      mt += b*B;
     }
 
-    // Arpegiated chords — one arpeggio every 2 beats
-    let ct = startTime;
-    const chordBeats = 2;
-    let ci = 0;
-    while (ct < startTime + loopDur) {
-      const chord = CHORDS[ci % CHORDS.length];
-      chord.forEach((f, i) => makeHarp(dest, f, ct + i * 0.18));
-      ct += chordBeats * BEAT;
-      ci++;
+    // Arpa arpeggiada cada 2 beats
+    let at = t; let ai = 0;
+    while (at < t+dur) {
+      const ch = ARP[ai % ARP.length];
+      ch.forEach((f,i) => note(dst, f, at+i*0.16, 2.8*B, 'sine', 0.055));
+      at += 2*B; ai++;
     }
 
-    // Pad (long sustained notes, very soft)
-    const padNotes = [D4, A4, Fs4, G4];
-    padNotes.forEach((f, i) => {
-      makeNote(dest, f, startTime + i * (loopDur/padNotes.length),
-               loopDur / padNotes.length * 1.1, 'triangle', 0.06);
+    // Pad suave (triángulo)
+    [293.66,440.00,369.99,493.88].forEach((f,i) => {
+      note(dst, f, t+i*(dur/4), dur/4*1.1, 'triangle', 0.04);
     });
 
-    // Loop
-    ctx.suspend && setTimeout(() => {
-      if (ctx && ctx.state !== 'closed')
-        schedulePart(dest, startTime + loopDur);
-    }, (loopDur - 1) * 1000);
+    // Re-schedule loop
+    setTimeout(() => { if(ctx && ctx.state!=='closed') loop(dst, t+dur); }, (dur-1.5)*1000);
   }
 
-  // Start on first user interaction (browser policy)
-  const events = ['touchstart','touchend','click','keydown','scroll'];
-  function onInteract() {
-    initAudio();
-    events.forEach(e => document.removeEventListener(e, onInteract));
+  // Intentar autoplay inmediato
+  function tryStart() {
+    try { start(); } catch(e) {}
   }
-  events.forEach(e => document.addEventListener(e, onInteract, {once:false, passive:true}));
+
+  // 1) Al cargar
+  if (document.readyState === 'complete') tryStart();
+  else window.addEventListener('load', tryStart);
+
+  // 2) Al primer gesto (por si el navegador bloquea autoplay)
+  const ev = ['touchstart','touchend','click','scroll','keydown','mousedown'];
+  function onGesture() {
+    tryStart();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+    ev.forEach(e => document.removeEventListener(e, onGesture));
+  }
+  ev.forEach(e => document.addEventListener(e, onGesture, {passive:true}));
+
+  // 3) Vigilar si el contexto se suspende y reactivarlo
+  setInterval(() => {
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }, 2000);
 })();
 </script>
 
