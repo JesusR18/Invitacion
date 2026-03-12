@@ -1,0 +1,16 @@
+{
+  "name": "invitacion",
+  "version": "1.0.0",
+  "description": "Static invitation page for deployment on Railway",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=16"
+  },
+  "license": "MIT"
+}
