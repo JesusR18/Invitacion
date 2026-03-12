@@ -317,7 +317,7 @@ body{background:var(--ivory);color:var(--ink);font-family:'EB Garamond',serif;ov
       <div class="c-icon">🕊️</div>
       <div class="c-tag">Santa Misa</div>
       <div class="c-val">Sábado 14 de Marzo</div>
-      <div class="c-sub">2026 · 11:30 horas</div>
+      <div class="c-sub">2026 · 11:15 horas</div>
     </div>
     <div class="card">
       <div class="c-icon">⛪</div>
@@ -329,7 +329,7 @@ body{background:var(--ivory);color:var(--ink);font-family:'EB Garamond',serif;ov
       <div class="c-icon">🥂</div>
       <div class="c-tag">Recepción</div>
       <div class="c-val" contenteditable="true">Salón / Lugar</div>
-      <div class="c-sub" contenteditable="true">Hora de la recepción</div>
+      <div class="c-sub">Domingo 15 de Marzo · 1:00 PM</div>
     </div>
     <div class="card">
       <div class="c-icon">✉️</div>
@@ -347,7 +347,7 @@ body{background:var(--ivory);color:var(--ink);font-family:'EB Garamond',serif;ov
       <span class="btn-icon">🗺️</span>Cómo llegar<span class="btn-arr">→</span>
     </a>
     <a class="btn btn-cal"
-       href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Bodas+de+Oro+de+Florencio+%26+Virginia&dates=20260314T113000/20260314T160000&details=Santa+Misa+y+recepci%C3%B3n+por+el+50+aniversario+de+Florencio+y+Virginia&location=Parroquia+de+la+Divina+Providencia%2C+Antiguo+Camino+Real+a+Castillotla%2C+Lomas+de+Castillotla%2C+72490+Puebla"
+       href="https://calendar.google.com/calendar/render?action=TEMPLATE&text=Bodas+de+Oro+de+Florencio+%26+Virginia&dates=20260314T111500/20260314T160000&details=Santa+Misa+y+recepci%C3%B3n+por+el+50+aniversario+de+Florencio+y+Virginia&location=Parroquia+de+la+Divina+Providencia%2C+Antiguo+Camino+Real+a+Castillotla%2C+Lomas+de+Castillotla%2C+72490+Puebla"
        target="_blank" rel="noopener">
       <span class="btn-icon">📅</span>Guardar en mi calendario<span class="btn-arr">→</span>
     </a>
@@ -616,7 +616,7 @@ function updateMeta() {
 }
 
 /* ═══ COUNTDOWN — 14 March 2026 11:30 ═══ */
-const EVENT = new Date('2026-03-14T11:30:00');
+const EVENT = new Date('2026-03-14T11:15:00');
 (function tick() {
   const d = EVENT - new Date();
   if (d <= 0) {
@@ -643,7 +643,8 @@ function sendRSVP() {
     quizas:'confirmará su asistencia próximamente'
   }[assist];
   const emoji = {si:'💛',no:'🥺',quizas:'🤍'}[assist];
-  const msg = `${emoji} *${name}* ${status} a las *Bodas de Oro de Florencio & Virginia* 🌿\n📅 Sábado 14 de Marzo · 11:30 h`
+  const msg = `${emoji} *${name}* ${status} a las *Bodas de Oro de Florencio & Virginia* 🌿\n📅 Misa: Sábado 14 de Marzo · 11:15 h
+🥂 Recepción: Domingo 15 de Marzo · 1:00 PM`
             + (note ? `\n\n💬 "${note}"` : '');
   window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
   document.querySelector('.m-submit').style.display = 'none';
